@@ -11,6 +11,7 @@ from sklearn.metrics import r2_score
 def unix_to_date_str(unix_timestamp):
     return datetime.datetime.utcfromtimestamp(unix_timestamp/1000).strftime('%Y-%m-%d')
     
+# Define Global Variables
 EXCHANGE_URL = "https://www.deribit.com/api/v2/public"
 INSTRUMENTS_END_POINT = "/get_instruments"
 ORDER_BOOK_END_POINT = "/get_order_book_by_instrument_id"
@@ -20,6 +21,7 @@ CONTRACT_MONTH = "2022-06-24"
 RATE_LIMIT = 5
 
 def run():
+    # Simply Get all options contract First
     payloads = {"currency": CURRENCY, "kind": KIND }
     res = requests.get(f"{EXCHANGE_URL}{INSTRUMENTS_END_POINT}",params=payloads)
     option_list = res.json()['result']
@@ -58,7 +60,7 @@ def run():
     puts_x = [put[1] for put in puts if put[1] <= 60000]
     puts_y = [put[2] for put in puts if put[1] <= 60000]
     put_model = np.poly1d(np.polyfit(puts_x,puts_y, 2))
-    
+
     print("\n")
     print("\n")
     print("--------------------CALL volatility curve Equation-----------------------")
@@ -68,6 +70,9 @@ def run():
     print("--------------------PUT volatility curve Equation-----------------------")
     print(f"Equation: {put_model}")
     print(f"R-Square: {r2_score(puts_y, put_model(puts_x))}")
+    print("\n")
+    print("Check out the visualization in Walk Through.ipynb!!!")
+    print("Now wait for another 5 mins zzz...")
 
 if __name__ == '__main__':
     #Print the equation every 5 min
