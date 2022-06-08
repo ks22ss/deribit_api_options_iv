@@ -23,7 +23,7 @@ RATE_LIMIT = 5
 def run():
     # Simply Get all options contract First
     payloads = {"currency": CURRENCY, "kind": KIND }
-    res = requests.get(f"{EXCHANGE_URL}{INSTRUMENTS_END_POINT}",params=payloads)
+    res = requests.get(f"{EXCHANGE_URL}{INSTRUMENTS_END_POINT}",params=payloads,timeout=10)
     option_list = res.json()['result']
     time.sleep(1)
 
@@ -41,7 +41,7 @@ def run():
 
         while True:
             try:
-                res = requests.get(f"{EXCHANGE_URL}{ORDER_BOOK_END_POINT}",params=payloads)
+                res = requests.get(f"{EXCHANGE_URL}{ORDER_BOOK_END_POINT}",params=payloads,timeout=10)
             except:
                 print("Error. Try again in 5 secs.")
                 time.sleep(5)
