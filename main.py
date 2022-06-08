@@ -38,7 +38,16 @@ def run():
             print(f"Querying Option Chain Data... {(count/len(relevant_options)*100):.2f}% Complete")
             time.sleep(1)
         payloads = {"instrument_id": option['instrument_id']}
-        res = requests.get(f"{EXCHANGE_URL}{ORDER_BOOK_END_POINT}",params=payloads)
+
+        while True:
+            try:
+                res = requests.get(f"{EXCHANGE_URL}{ORDER_BOOK_END_POINT}",params=payloads)
+            except:
+                print("Error. Try again in 5 secs.")
+                time.sleep(5)
+                continue
+            break
+        
         
         strike_price = option['strike']
         option_type = option['option_type']
