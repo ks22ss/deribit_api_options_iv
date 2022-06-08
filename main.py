@@ -7,10 +7,6 @@ import schedule
 import time
 from sklearn.metrics import r2_score
 
-# Helper Function
-def unix_to_date_str(unix_timestamp):
-    return datetime.datetime.utcfromtimestamp(unix_timestamp/1000).strftime('%Y-%m-%d')
-    
 # Define Global Variables
 EXCHANGE_URL = "https://www.deribit.com/api/v2/public"
 INSTRUMENTS_END_POINT = "/get_instruments"
@@ -20,10 +16,32 @@ KIND = "option"
 CONTRACT_MONTH = "2022-06-24"
 RATE_LIMIT = 5
 
+
+# Helper Function
+def unix_to_date_str(unix_timestamp):
+    return datetime.datetime.utcfromtimestamp(unix_timestamp/1000).strftime('%Y-%m-%d')
+    
+def retry(func):
+    def repeat_every_five_sec(*args, **kwargs):
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except:
+                print("Error. Try again in 5 secs.")
+                time.sleep(5)
+                continue
+            break
+    return repeat_every_five_sec
+
+@retry
+def send_request(baseURL, endpoint, payloads, timeout):
+    return requests.get(f"{baseURL}{endpoint}",params=payloads,timeout=timeout)
+
+
 def run():
     # Simply Get all options contract First
     payloads = {"currency": CURRENCY, "kind": KIND }
-    res = requests.get(f"{EXCHANGE_URL}{INSTRUMENTS_END_POINT}",params=payloads,timeout=10)
+    res = send_request(EXCHANGE_URL, INSTRUMENTS_END_POINT, payloads, 10)
     option_list = res.json()['result']
     time.sleep(1)
 
@@ -34,20 +52,13 @@ def run():
     results = []
     count = 0
     for option in relevant_options:
+        
         if count % RATE_LIMIT == 0:
             print(f"Querying Option Chain Data... {(count/len(relevant_options)*100):.2f}% Complete")
             time.sleep(1)
         payloads = {"instrument_id": option['instrument_id']}
+        res = send_request(EXCHANGE_URL, ORDER_BOOK_END_POINT, payloads, 10)
 
-        while True:
-            try:
-                res = requests.get(f"{EXCHANGE_URL}{ORDER_BOOK_END_POINT}",params=payloads,timeout=10)
-            except:
-                print("Error. Try again in 5 secs.")
-                time.sleep(5)
-                continue
-            break
-        
         
         strike_price = option['strike']
         option_type = option['option_type']
